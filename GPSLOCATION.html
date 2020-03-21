@@ -1,0 +1,173 @@
+ <!Doctype HTML>
+ <html>
+     <head>
+         <script src = "gps.js"></script>
+         <script src = "p5/p5/p5.js"></script>
+         <script src = "p5/p5/p5.min.js"></script>
+        <script>
+            var currentWidth = 300;
+            var currentHeight = 400;
+
+            var translatedX = 0;
+            var translatedY = 0;
+        
+            var down = false;
+            var x = 0;
+            var y = 0;
+
+            var scl = 1;
+
+            function drawOnCanvas(xPos1, yPos1, xPos2, yPos2, xGoal, yGoal) {
+                //var ctx = document.getElementById('showPositions').getContext('2d');
+                //var canvas = document.getElementById('showPositions');
+                //ctx.clearRect(0, 0, canvas.width, canvas.height);
+                fill(0, 255, 0);
+                ellipse(xGoal, yGoal, 50, 50);
+                //ctx.beginPath();
+                var dir = getDirection(xPos1, yPos1, xPos2, yPos2);
+                let vector = createVector(dir.x, dir.y);
+                //canvas_arrow(ctx, xPos2, yPos2, xPos2 + dir.x *28, yPos2 + 
+                //dir.y * 28);
+                drawArrow(vector, createVector(vector.x*50, vector.y * 50), 'black');
+               /* ctx.stroke();
+                ctx.moveTo(xGoal, yGoal);
+                ctx.arc(xGoal, yGoal, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = "green";
+                ctx.fill();
+                ctx.stroke();*/
+            }
+            function setup() {
+                let falseCanvas = document.getElementById('defaultCanvas0');
+                falseCanvas.parentNode.removeChild(falseCanvas);
+
+                h = windowHeight * 0.8;
+                w = windowWidth;
+                createCanvas(300, 400);
+                rectMode(CENTER);
+            }
+
+            function draw() {
+                dY = (touches[0].y - touches[1].y) / 5;
+                clear();
+                translate(translatedX, translatedY);
+                translate(width / 2, height /2);
+                scale(dy);
+                translate(-width/2, -height/2)
+                drawOnCanvas(20, 20, 56, 43, 190, 200);
+            }
+
+            function drawArrow(base, vec, myColor) {
+                push();
+                //stroke(myColor);
+                //strokeWeight(3);
+                fill(myColor);
+                translate(width/2, height*0.5);
+                //line(0, 0, vec.x, vec.y);
+                rotate(getHeadingDirection());
+                let arrowSize = 20;
+                //translate(vec.mag() - arrowSize, 0);
+                triangle(0, arrowSize / 2, 0, -arrowSize / 2, arrowSize, 0);
+                pop();
+            }
+
+            function getDirection(x1, y1, x2, y2) {
+                let v = {x: x2 - x1, y : y2 - y1};
+
+                let magnitude = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+
+                v.x = v.x / magnitude;
+                v.y = v.y / magnitude;
+
+                return {
+                    x : v.x,
+                    y : v.y
+                };
+            }
+            
+            function getMousePos() {
+                var rect = document.getElementById("showPositions").getBoundingClientRect();
+                var mPos =  {
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top
+                };
+                console.log(mPos.x + "   " + mPos.y);
+            }
+
+            function zoom(zIn) {
+                if (!zIn) {
+                    scl *= 0.9;
+                } else {
+                    scl *= 1.5
+                }
+            }
+
+            function mousePressed() {
+                down = true;
+                x = mouseX;
+                y = mouseY;
+            }
+
+            function mouseDragged() {
+                //console.log(down);
+                //if (down) {
+                    translatedX += x - mouseX;
+                    translatedY += y - mouseY;
+
+                    x = mouseX;
+                    y = mouseY;
+                //}
+            }
+
+            function mouseReleased() {
+                down = false;
+            }
+
+            var update = false;
+            setInterval(function(){
+                if (update)
+                    drawOnCanvas(20, 20, 56, 43, 190, 200);
+            }, 40);
+            function stopRes() {
+                update = !update;
+                if (update) {
+                    document.getElementByID('changeUpdate').innerText = "Stop Updating";
+                } else {
+                    document.getElementByID('changeUpdate').innerText = "Start Updating";
+                }
+            }
+
+            function touchStarted(){
+                return false;
+            }
+
+            function touchMoved(){
+                return false;
+            }
+
+            function touchEnded(){
+                return false;
+            }
+            </script>
+    </head>
+    <body>
+
+
+        <button onclick = "zoom(false)">zoom out</button>
+        <button onclick = "zoom(true)">zoom in</button>
+        <!--<canvas id="showPositions" width="400" height="300"
+        style="border:1px solid #c3c3c3;" onclick="getMousePos()"></canvas>
+
+        <button onclick="drawOnCanvas(20, 20, 56, 43, 190, 200)">try it</button>
+        <button onclick = "zoom(false)">zoom out</button>
+        <button onclick = "zoom(true)">zoom in</button>
+        <button id='changeUpdate'onclick = "stopRes()">Start updating</button>
+        <p id="demo">coords</p>
+        <p id = "test">notpressed</p>
+        <p id = "dist">distance</p>
+        <p id = "test2">err</p> -->
+            <style>
+                body {background: #aaa}
+                #defaultCanvas1 {background: #fff}
+            </style>
+    </body>
+</html>
