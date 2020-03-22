@@ -3,16 +3,11 @@ let curPos = null;
 const toRadians = Math.PI / 180;
 const R = 6371e3; // metres
 let watch_ID = -1;
+let positions = []
 
 function getLocation() {
-    let pos = cordsToPos(0,0);
-    if(navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function (position) {
-            pos = position;
-        }, showError, {
-            enableHighAccuracy: true});
-    }
-    return pos;
+    writeLocationToCord(setPos)
+    return curPos;
 }
 
 function writeLocationToCord(func) {
@@ -25,6 +20,17 @@ function writeLocationToCord(func) {
 //This function gets called when the position updates
 function trackPosition() {
     writeLocationToCord(setPos)
+    if(positions.length > 10) {
+        if(calcDiff(positions[positions.length-1], curPos) > 5) {
+            positions.push(curPos)
+        }
+    } else {
+        positions.push(curPos)
+    }
+}
+
+function posToCords(pos) {
+    return {lat: pos.coords.latitude, lon: pos.coords.longitude}
 }
 
 // Setters for positions
@@ -44,6 +50,38 @@ function cordsToPos(lat, lon) {
 function distToGoal() {
     writeLocationToCord(setPos)
     return calcDiff(goalPos, curPos)
+}
+
+function getCurLat() {
+    if(curPos != null) {
+        return curPos.coords.latitude;
+    } else {
+        return 0;
+    }
+}
+
+function getCurLon() {
+    if(curPos != null) {
+        return curPos.coords.longitude;
+    } else {
+        return 0;
+    }
+}
+
+function getGoalLat() {
+    if(goalPos != null) {
+        return goalPos.coords.latitude;
+    } else {
+        return 0;
+    }
+}
+
+function getGoalLon() {
+    if(goalPos != null) {
+        return goalPos.coords.longitude;
+    } else {
+        return 0;
+    }
 }
 
 // Returns distance between two points (Format: {coords:{latitude:x, longitude:y}})
@@ -98,5 +136,6 @@ function getHeadingDirection() {
 function showError(error) {
     console.log(error);
 }
+
 
 
