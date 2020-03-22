@@ -1,97 +1,114 @@
- <!Doctype HTML>
- <html>
-     <head>
-         <script src = "gps.js"></script>
-         <script src = "p5/p5/p5.js"></script>
-         <script src = "p5/p5/p5.min.js"></script>
-         <meta name="viewport" content="width=device-width, user-scalable=no">
-        <script>
-            var currentWidth = 300;
-            var currentHeight = 400;
+<!Doctype HTML>
+<html>
 
-            var translatedX = 0;
-            var translatedY = 0;
-        
-            var down = false;
-            var x = 0;
-            var y = 0;
-            var hasSetScale = false;
+<head>
+    <script src="gps.js"></script>
+    <script src="p5/p5/p5.js"></script>
+    <script src="p5/p5/p5.min.js"></script>
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+    <script>
+        var currentWidth = 300;
+        var currentHeight = 400;
 
-            var scl = 5000;
+        var reached = false;
 
-            function drawOnCanvas(xPos1, yPos1, xPos2, yPos2, xGoal, yGoal) {
-                drawGoal(xGoal, yGoal,(255,0,0))
-                var dir = getDirection(xPos1, yPos1, xPos2, yPos2);
-                let vector = createVector(dir.x, dir.y);
-                drawArrow(vector, createVector(vector.x*50, vector.y * 50), 'black');
+        var translatedX = 0;
+        var translatedY = 0;
+
+        var down = false;
+        var x = 0;
+        var y = 0;
+        var hasSetScale = false;
+
+        var scl = 5000;
+
+        function drawOnCanvas(xPos1, yPos1, xPos2, yPos2, xGoal, yGoal) {
+            drawGoal(xGoal, yGoal, (255, 0, 0))
+            var dir = getDirection(xPos1, yPos1, xPos2, yPos2);
+            let vector = createVector(dir.x, dir.y);
+            drawArrow(vector, createVector(vector.x * 50, vector.y * 50), 'black');
+        }
+
+
+        function setup() {
+            tick = loadImage("iconfinder_Tick_Mark_1398911.png");
+            let falseCanvas = document.getElementById('defaultCanvas0');
+            falseCanvas.parentNode.removeChild(falseCanvas);
+            h = windowHeight;
+            w = windowWidth;
+            let canvas = createCanvas(w, h);
+            rectMode(CENTER);
+            setGoalPos(cordsToPos(51.89201292156027, 8.988064368990246));
+            getLocation()
+            setWatchingMode(true)
+            frameRate(20);
+
+
+        }
+
+        var prevY = [];
+        var currentAnimPos = 0;
+        var fade = 0;
+        function draw() {
+            if (!hasSetScale && curPos != null && goalPos != null) {
+                resetScale();
+                hasSetScale = true;
             }
-            function setup() {
-                let falseCanvas = document.getElementById('defaultCanvas0');
-                falseCanvas.parentNode.removeChild(falseCanvas);
-                h = windowHeight;
-                w = windowWidth;
-                let canvas = createCanvas(w, h);
-                rectMode(CENTER);
-                setGoalPos(cordsToPos(51.89201292156027,8.988064368990246));
-                getLocation()
-                setWatchingMode(true)
-                frameRate(20);
-            }
-
-            var prevY = [];
-            function draw() {
-                if(!hasSetScale && curPos != null && goalPos != null) {
-                    resetScale();
-                    hasSetScale = true;
+            var dy = 0;
+            if (touches.length > 1) {
+                if (prevY.length < 2) {
+                    prevY.push(touches[0].y);
+                    prevY.push(touches[1].y);
                 }
-                var dy = 0;
-                if (touches.length > 1) {
-                    if (prevY.length < 2) {
-                        prevY.push(touches[0].y);
-                        prevY.push(touches[1].y);
-                    }
-                    dy = (touches[1].y - prevY[1]);
-                    prevY[1] = touches[1].y;
-                    //y = touches[0].y;
-                    //sx  = touches[0].x;
-                } else {
-                    prevY = [];
-                }
-                scl = Math.max(scl + dy*3, 1);
-                clear();
-                translate(translatedX, translatedY);
-                translate(width / 2, height /2);
-                drawOnCanvas(0, 0, 0, 0, (getGoalLat() - getCurLat()) * scl, (getGoalLon() - getCurLon())*scl);
+                dy = (touches[1].y - prevY[1]);
+                prevY[1] = touches[1].y;
+                //y = touches[0].y;
+                //sx  = touches[0].x;
+            } else {
+                prevY = [];
+            }
+            scl = Math.max(scl + dy * 3, 1);
+            clear();
+            translate(translatedX, translatedY);
+            translate(width / 2, height / 2);
+            currentAnimPos++;
+            drawOnCanvas(0, 0, 0, 0, (getGoalLat() - getCurLat()) * scl, (getGoalLon() - getCurLon()) * scl);
+
+            if (reached) {
+                goalReached(fade);
+                fade+=4;
             }
 
-            function drawArrow(base, vec, myColor) {
+        }
+
+        function drawArrow(base, vec, myColor) {
             push();
             fill(myColor);
             rotate(getHeadingDirection());
             let arrowSize = 20;
             beginShape();
-            vertex(0,0);
-            vertex(arrowSize/2, arrowSize)
-            vertex(0, arrowSize/1.5)
-            vertex(-arrowSize/2, arrowSize)
+            vertex(0, 0);
+            vertex(arrowSize / 2, arrowSize)
+            vertex(0, arrowSize / 1.5)
+            vertex(-arrowSize / 2, arrowSize)
             endShape()
             pop();
         }
-        
-        function drawGoal(x,y,myColor) {
+
+        function drawGoal(x, y, myColor) {
             push();
             fill(0, 255, 0);
             noStroke();
-            ellipse(x, y, scl*0.005);
+            ellipse(x, y, scl * 0.005);
             strokeWeight(0);
-            translate(x,y);
+            translate(x, y);
             fill(myColor);
             let size = 40;
             beginShape();
-            vertex(0,0)
-            vertex(size*0.2, size*-0.8);
-            vertex(size*-0.2, size*-0.8);
-            for(var i = 0; i < Math.PI; i+=0.1) {
+            vertex(0, 0)
+            vertex(size * 0.2, size * -0.8);
+            vertex(size * -0.2, size * -0.8);
+            for (var i = 0; i < Math.PI; i += 0.1) {
                 vertex(cos(i) * 0.2 * size, sin(i) * -0.2 * size + size * -0.8)
             }
 
@@ -99,99 +116,157 @@
             pop();
         }
 
-            function getDirection(x1, y1, x2, y2) {
-                let v = {x: x2 - x1, y : y2 - y1};
+        function getDirection(x1, y1, x2, y2) {
+            let v = { x: x2 - x1, y: y2 - y1 };
 
-                let magnitude = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+            let magnitude = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
 
-                v.x = v.x / magnitude;
-                v.y = v.y / magnitude;
+            v.x = v.x / magnitude;
+            v.y = v.y / magnitude;
 
-                return {
-                    x : v.x,
-                    y : v.y
-                };
+            return {
+                x: v.x,
+                y: v.y
+            };
+        }
+
+        function getMousePos() {
+            var rect = document.getElementById("showPositions").getBoundingClientRect();
+            var mPos = {
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
+            };
+            console.log(mPos.x + "   " + mPos.y);
+        }
+
+        function zoom(zIn) {
+            if (!zIn) {
+                scl *= 0.9;
+            } else {
+                scl *= 1.5
             }
-            
-            function getMousePos() {
-                var rect = document.getElementById("showPositions").getBoundingClientRect();
-                var mPos =  {
-                    x: event.clientX - rect.left,
-                    y: event.clientY - rect.top
-                };
-                console.log(mPos.x + "   " + mPos.y);
-            }
+        }
 
-            function zoom(zIn) {
-                if (!zIn) {
-                    scl *= 0.9;
-                } else {
-                    scl *= 1.5
-                }
-            }
+        function mousePressed() {
+            down = true;
+            x = mouseX;
+            y = mouseY;
+        }
 
-            function mousePressed() {
-                down = true;
+        function mouseDragged() {
+            if (touches.length < 2 && Math.abs(x - mouseX) < 100 && Math.abs(y - mouseY) < 100) {
+                translatedX -= x - mouseX;
+                translatedY -= y - mouseY;
+
+                x = mouseX;
+                y = mouseY;
+            } else {
                 x = mouseX;
                 y = mouseY;
             }
+        }
 
-            function mouseDragged() {
-                if (touches.length < 2 && Math.abs(x - mouseX) < 100 && Math.abs(y - mouseY) < 100) {
-                    translatedX -= x - mouseX;
-                    translatedY -= y - mouseY;
+        function mouseReleased() {
+            down = false;
+        }
 
-                    x = mouseX;
-                    y = mouseY;
-                } else {
-                    x = mouseX;
-                    y = mouseY;
-                }
+        var update = false;
+        setInterval(function () {
+            if (update)
+                drawOnCanvas(20, 20, 56, 43, 190, 200);
+        }, 40);
+        function stopRes() {
+            update = !update;
+            if (update) {
+                document.getElementByID('changeUpdate').innerText = "Stop Updating";
+            } else {
+                document.getElementByID('changeUpdate').innerText = "Start Updating";
             }
+        }
 
-            function mouseReleased() {
-                down = false;
-            }
+        function centerScreen() {
+            translatedX = translatedY = 0;
+            resetScale()
+        }
 
-            var update = false;
-            setInterval(function(){
-                if (update)
-                    drawOnCanvas(20, 20, 56, 43, 190, 200);
-            }, 40);
-            function stopRes() {
-                update = !update;
-                if (update) {
-                    document.getElementByID('changeUpdate').innerText = "Stop Updating";
-                } else {
-                    document.getElementByID('changeUpdate').innerText = "Start Updating";
-                }
-            }
-
-            function centerScreen() {
-                translatedX = translatedY = 0;
-                resetScale()
-            }
-
-            function resetScale() {
+        function resetScale() {
             scl = distToGoal() / 2;
         }
-            </script>
-    </head>
-    <body>
 
-        
-        <div id="holder">
-            <button onclick="centerScreen()" id="centerButton" ><img src="iconfinder_miscellaneous-29_809410.png"/></button>
-        </div>
-            <style>
-                body {margin: 0; padding:0; background: #fff; overflow: hidden}
-                #holder {position:absolute; height: 100%; width:100%}
-                #centerButton {position: absolute; right: 5px; bottom: 5px; z-index: 1000;height: 10%; width:10%; background:transparent; border:none}
-                #centerButton img {width:100%; position: absolute; bottom: 0; right: 0}
-                @media only screen and (min-width: 700px) {
-                    #centerButton {height: 5%; width:5%}
-                }
-                #defaultCanvas1 {background: #fff}
-            </style>
-    </body>
+        var tick = null;
+
+        function goalReached(fade) {
+            if (fade < 210) {
+                noStroke();
+                fill(240, fade);
+                rect(0, 0, width, height);
+                translate(-translatedX - width / 2, -translatedY - height / 2);
+                let hei = Math.max(fade * 2.438, 5)
+                image(tick, width / 2 - hei / 4, height / 2 - hei / 4, hei / 2, hei / 2);
+                //image(width * 0.5, height * 0.5);
+            } else {
+                fill(240, 210);
+                rect(0, 0, width, height);
+                fill(255, 255);
+                translate(-translatedX - width / 2, -translatedY - height / 2);
+                image(tick, width / 2 - 512 / 4, height / 2 - 512 / 4, 512/2, 512/2);
+                textSize(20);
+                fill(0);
+                text('Du kannst anfangen zu arbeiten', width / 2 - 512 / 4 + 11, height / 2 + 512 / 4 + 10);
+            }
+        } 
+    </script>
+</head>
+
+<body>
+
+
+    <div id="holder">
+        <button onclick="centerScreen()" id="centerButton"><img src="iconfinder_miscellaneous-29_809410.png" /></button>
+    </div>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            overflow: hidden
+        }
+
+        #holder {
+            position: absolute;
+            height: 100%;
+            width: 100%
+        }
+
+        #centerButton {
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            z-index: 1000;
+            height: 10%;
+            width: 10%;
+            background: transparent;
+            border: none
+        }
+
+        #centerButton img {
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            right: 0
+        }
+
+        @media only screen and (min-width: 700px) {
+            #centerButton {
+                height: 5%;
+                width: 5%
+            }
+        }
+
+        #defaultCanvas1 {
+            background: #fff
+        }
+    </style>
+</body>
+
 </html>

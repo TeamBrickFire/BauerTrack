@@ -20,8 +20,13 @@ function writeLocationToCord(func) {
 //This function gets called when the position updates
 function trackPosition() {
     writeLocationToCord(setPos)
-    if(positions.length > 10) {
-        if(calcDiff(positions[positions.length-1], curPos) > 5) {
+    savePos();
+}
+
+function savePos() {
+
+    if(positions.length > 1) {
+        if(calcDiff(positions[positions.length-1], curPos) >300) {
             positions.push(curPos)
         }
     } else {
@@ -42,13 +47,15 @@ function setPos(pos) {
     curPos = pos;
 }
 
+
+
 function cordsToPos(lat, lon) {
     return {coords:{latitude: lat, longitude: lon, accuracy:0}, timestamp:0};
 }
 
 // Returns distance between goal and current position
 function distToGoal() {
-    writeLocationToCord(setPos)
+    //writeLocationToCord(setPos)
     return calcDiff(goalPos, curPos)
 }
 
